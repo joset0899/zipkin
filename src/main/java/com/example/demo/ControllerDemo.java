@@ -20,7 +20,7 @@ public class ControllerDemo {
 	
 	@RequestMapping("/trace/exito/")
 	@ResponseBody
-	public String traceExito(){
+	public String traceExito()throws Exception {
 			
 		log.info("llamada demo sleuth");
 		String rpta = restTemplate.getForObject("http://localhost:8085/servicio-intermedio/serviciointermedio", String.class);

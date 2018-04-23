@@ -1,0 +1,166 @@
+<configuration>
+	<include resource="org/springframework/boot/logging/logback/defaults.xml" />
+	
+	<springProperty scope="context" name="LOG_PATH" source="logging.path" defaultValue="/home/joset/logs/"/>
+	<springProperty scope="context" name="SERVER_LOGSTASH_IP" source="server.logstash.ip" defaultValue="127.0.0.1"/>
+	<springProperty scope="context" name="SERVER_LOGSTASH_PORT" source="server.logstash.port" defaultValue="4560"/>
+	
+	
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder
+			class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+			<providers>
+				<timestamp>
+					<fieldName>time</fieldName>
+					<pattern>yyyy-MM-dd'T'HH:mm:ss.SSS'Z'</pattern>
+					
+				</timestamp>
+				<logLevel>
+					<fieldName>severity</fieldName>
+				</logLevel>
+				<context />
+				<pattern>
+					<pattern>{ "trace-id": "%mdc{X-B3-TraceId:-}" }</pattern>
+				</pattern>
+				<loggerName>
+					<fieldName>logger</fieldName>
+				</loggerName>
+				<message />
+
+				<stackHash>
+					<fieldName>exception-hash</fieldName>
+				</stackHash>
+				<stackTrace>
+					<fieldName>exception</fieldName>
+					<throwableConverter
+						class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+						<shortenedClassNameLength>20</shortenedClassNameLength>
+						<maxDepthPerThrowable>30</maxDepthPerThrowable>
+						<maxLength>2048</maxLength>
+						<rootCauseFirst>true</rootCauseFirst>
+						<exclude>sun\.reflect\..*\.invoke.*</exclude>
+					</throwableConverter>
+				</stackTrace>
+
+			</providers>
+		</encoder>
+    </appender>
+	
+	<appender name="stashtcp"
+		class="net.logstash.logback.appender.LogstashAccessTcpSocketAppender">
+		<destination>${SERVER_LOGSTASH_IP}:${SERVER_LOGSTASH_PORT}</destination>
+
+		<!-- encoder is required -->
+		<encoder
+			class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+			<providers>
+				<timestamp>
+					<fieldName>time</fieldName>
+					<pattern>yyyy-MM-dd'T'HH:mm:ss.SSS'Z'</pattern>
+					
+				</timestamp>
+				<logLevel>
+					<fieldName>severity</fieldName>
+				</logLevel>
+				<context />
+				<pattern>
+					<pattern>{ "trace-id": "%mdc{X-B3-TraceId:-}" }</pattern>
+				</pattern>
+				<loggerName>
+					<fieldName>logger</fieldName>
+				</loggerName>
+				<message />
+
+				<stackHash>
+					<fieldName>exception-hash</fieldName>
+				</stackHash>
+				<stackTrace>
+					<fieldName>exception</fieldName>
+					<throwableConverter
+						class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+						<shortenedClassNameLength>20</shortenedClassNameLength>
+						<maxDepthPerThrowable>30</maxDepthPerThrowable>
+						<maxLength>2048</maxLength>
+						<rootCauseFirst>true</rootCauseFirst>
+						<exclude>sun\.reflect\..*\.invoke.*</exclude>
+					</throwableConverter>
+				</stackTrace>
+
+			</providers>
+		</encoder>
+	</appender>
+
+	<appender name="stash"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+			<level>info</level>
+		</filter>
+		<file>${LOG_PATH}/file.json</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>${LOG_PATH}file.json.%d{yyyy-MM-dd}
+			</fileNamePattern>
+			<maxHistory>10</maxHistory>
+			<totalSizeCap>100MB</totalSizeCap>
+		</rollingPolicy>
+
+
+		<encoder
+			class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+			<providers>
+				<timestamp>
+					<fieldName>time</fieldName>
+					<pattern>yyyy-MM-dd'T'HH:mm:ss.SSS'Z'</pattern>
+				</timestamp>
+				<logLevel>
+					<fieldName>severity</fieldName>
+				</logLevel>
+				<context />
+				<pattern>
+					<pattern>{ "trace-id": "%mdc{X-B3-TraceId:-}" }</pattern>
+				</pattern>
+				<loggerName>
+					<fieldName>logger</fieldName>
+				</loggerName>
+				<message />
+
+				<stackHash>
+					<fieldName>exception-hash</fieldName>
+				</stackHash>
+				<stackTrace>
+					<fieldName>exception</fieldName>
+					<throwableConverter
+						class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+						<shortenedClassNameLength>20</shortenedClassNameLength>
+						<maxDepthPerThrowable>30</maxDepthPerThrowable>
+						<maxLength>2048</maxLength>
+						<rootCauseFirst>true</rootCauseFirst>
+						<exclude>sun\.reflect\..*\.invoke.*</exclude>
+					</throwableConverter>
+				</stackTrace>
+
+			</providers>
+		</encoder>
+	</appender>
+	
+	<springProfile name="dev">
+		<root level="info">
+            <appender-ref ref="STDOUT" />
+        </root>
+	</springProfile>
+	
+	<springProfile name="qa">
+		<root level="info">
+            <appender-ref ref="STDOUT" />
+            <appender-ref ref="stashtcp" />
+        </root>
+	</springProfile>
+	
+	<springProfile name="prod">
+		<root level="info">
+            <appender-ref ref="STDOUT" />
+            <appender-ref ref="stashtcp" />
+        </root>
+	</springProfile>
+	
+	
+</configuration>
